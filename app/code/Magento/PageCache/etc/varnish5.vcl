@@ -205,11 +205,14 @@ sub vcl_deliver {
         set resp.http.X-Magento-Cache-Debug = "MISS";
     }
 
-    # Not letting browser to cache non-static files.
-    if (resp.http.Cache-Control !~ "private" && req.url !~ "^/(pub/)?(media|static)/") {
-        set resp.http.Pragma = "no-cache";
-        set resp.http.Expires = "-1";
-        set resp.http.Cache-Control = "no-store, no-cache, must-revalidate, max-age=0";
+    # Allowing Magento to manage cache headers for non-static files.
+    # If headers aren't set, default values are applied for Varnish caching.
+    if (req.url !~ "^/(pub/)?(media|static)/") {
+        if (!resp.http.Cache-Control) {
+            set resp.http.Pragma = "no-cache";
+            set resp.http.Expires = "-1";
+            set resp.http.Cache-Control = "no-store, no-cache, must-revalidate, max-age=0";
+        }
     }
 
     if (!resp.http.X-Magento-Debug) {
